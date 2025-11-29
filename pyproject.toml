@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "arxiv2poster"
+version = "0.1.0"
+description = "Generate poster images from arXiv research papers using Gemini 3.0 Image Generation"
+readme = "README.md"
+requires-python = ">=3.8"
+license = {text = "MIT"}
+authors = [
+    {name = "arxiv2poster contributors"}
+]
+keywords = ["arxiv", "poster", "gemini", "ai", "image-generation"]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "google-genai>=0.2.0",
+    "arxiv>=2.1.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+]
+
+[project.scripts]
+arxiv2poster = "arxiv2poster.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/yourusername/arxiv2poster"
+Documentation = "https://github.com/yourusername/arxiv2poster#readme"
+Repository = "https://github.com/yourusername/arxiv2poster"
+Issues = "https://github.com/yourusername/arxiv2poster/issues"
+

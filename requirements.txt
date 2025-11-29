@@ -1,0 +1,8 @@
+# Core dependencies for arxiv2poster
+google-genai>=0.2.0
+arxiv>=2.1.0
+
+# Testing dependencies
+pytest>=7.4.0
+pytest-cov>=4.1.0
+
