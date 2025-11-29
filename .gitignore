@@ -41,6 +41,9 @@ outputs/
 *.jpeg
 *.pdf
 
+# Exception: Allow example images in blogposts
+!blogposts/examples/*.png
+
 # Environment variables
 .env
 .env.local
