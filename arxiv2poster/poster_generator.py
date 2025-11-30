@@ -136,9 +136,11 @@ WHAT IF IDEA TO INCORPORATE:
         layout_structure = """LAYOUT STRUCTURE:
 The image must be divided into TWO DISTINCT SECTIONS side by side:
 
-LEFT SIDE (60-65% of width): ACADEMIC POSTER"""
+LEFT SIDE (approximately 70-75% of width): ACADEMIC POSTER"""
         side_panel_section = """
-RIGHT SIDE (35-40% of width): Q&A CHAT INTERFACE
+RIGHT SIDE (approximately 25-30% of width, NOT TOO WIDE): Q&A CHAT INTERFACE
+- The side panel should be narrow, similar to a 9:16 portrait aspect ratio in terms of width proportion
+- Keep the side panel compact and focused, not taking up too much horizontal space
 - Design a modern chat interface/messaging app style box
 - Include a chat header/title area (e.g., "Questions & Answers" or "Q&A About This Paper")
 - Display up to 4 common questions and answers about the paper in a chat bubble format (maximum 4 Q&A pairs total)
@@ -156,6 +158,41 @@ VISUAL SEPARATION:
 - Ensure both sections are visually distinct but harmoniously integrated"""
         layout_note = "Side-by-side design with Q&A chat interface"
         side_panel_description = "Q&A chat interface"
+    elif side_panel == "history":
+        # Side-by-side layout with Research History
+        layout_structure = """LAYOUT STRUCTURE:
+The image must be divided into TWO DISTINCT SECTIONS side by side:
+
+LEFT SIDE (approximately 70-75% of width): ACADEMIC POSTER"""
+        side_panel_section = """
+RIGHT SIDE (approximately 25-30% of width, NOT TOO WIDE): RESEARCH HISTORY VISUALIZATION
+- The side panel should be narrow, similar to a 9:16 portrait aspect ratio in terms of width proportion
+- Keep the side panel compact and focused, not taking up too much horizontal space
+- Design a timeline or history visualization panel
+- Include a header/title area (e.g., "Research History" or "Evolution of This Field")
+- Visualize the research history leading up to this paper using information from Google Search
+- Display key milestones, influential papers, and important developments in chronological order
+- Use timeline design with:
+  - Vertical or horizontal timeline layout
+  - Key dates and events clearly marked
+  - Visual connections showing progression
+  - Important papers or breakthroughs highlighted
+  - Authors and institutions where relevant
+- Show how this current paper builds upon or relates to previous work
+- Include visual elements like:
+  - Timeline markers/points
+  - Connecting lines showing relationships
+  - Icons or symbols for different types of contributions
+  - Color coding for different research themes or eras
+- Make it visually appealing and easy to understand the research progression
+- The history should be based on actual research developments found through web search
+
+VISUAL SEPARATION:
+- Use a clear vertical divider or visual separator between the two sections
+- Can use a subtle border, different background colors, or shadow effects
+- Ensure both sections are visually distinct but harmoniously integrated"""
+        layout_note = "Side-by-side design with research history visualization"
+        side_panel_description = "research history visualization"
     elif side_panel:
         # Future: Other side panel types can be added here
         # For now, treat unknown types as no side panel
@@ -218,10 +255,26 @@ Q&A CONTENT REQUIREMENTS (Right Side):
 - Cover diverse aspects: technical details, practical applications, limitations, future work
 - Make Q&As informative and valuable for understanding the paper
 """ if side_panel == "qa" else ""}
+{f"""
+RESEARCH HISTORY CONTENT REQUIREMENTS (Right Side):
+- Use Google Search to find information about the research history leading up to this paper
+- Search for: key papers in this field, influential researchers, important milestones, evolution of the research area
+- Visualize the chronological progression of research in this field
+- Include major breakthroughs, foundational papers, and significant developments
+- Show how this current paper fits into the broader research landscape
+- Display key information such as:
+  - Important papers and their publication years
+  - Key researchers and their contributions
+  - Major milestones or paradigm shifts
+  - Evolution of methodologies or approaches
+- The history visualization should be based on real information found through web search
+- Make connections clear between historical developments and the current paper
+""" if side_panel == "history" else ""}
 IMPORTANT: 
 - The poster should prioritize visual communication over text. Use insights, highlights, and key points rather than descriptive paragraphs.
 {f"- The Q&A side should look like a real, modern chat interface with proper chat bubble styling." if side_panel == "qa" else ""}
-{f"- Both sides should work together as a cohesive single image that provides both visual poster information and interactive Q&A content." if side_panel == "qa" else "- The poster should convey the essence of the research quickly and effectively."}
+{f"- The history side should show a clear, visually appealing timeline or progression of research." if side_panel == "history" else ""}
+{f"- Both sides should work together as a cohesive single image that provides both visual poster information and {side_panel_description}." if side_panel else "- The poster should convey the essence of the research quickly and effectively."}
 """
     
     # Create content with PDF file, existing poster (if provided), and text prompt
@@ -253,14 +306,25 @@ IMPORTANT:
     if model == "pro":
         image_config_params["imageSize"] = resolution
     
+    # Add Google Search tool if history side panel is enabled
+    tools = None
+    if side_panel == "history":
+        tools = [
+            types.Tool(googleSearch=types.GoogleSearch())
+        ]
+    
     try:
+        config_params = {
+            "response_modalities": ['TEXT', 'IMAGE'],
+            "image_config": types.ImageConfig(**image_config_params),
+        }
+        if tools:
+            config_params["tools"] = tools
+        
         response = client.models.generate_content(
             model=api_model,
             contents=contents,
-            config=types.GenerateContentConfig(
-                response_modalities=['TEXT', 'IMAGE'],
-                image_config=types.ImageConfig(**image_config_params),
-            )
+            config=types.GenerateContentConfig(**config_params)
         )
     except Exception as e:
         error_msg = str(e)

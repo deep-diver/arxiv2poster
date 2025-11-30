@@ -122,9 +122,9 @@ Examples:
     parser.add_argument(
         '--side-panel',
         type=str,
-        choices=['qa'],
+        choices=['qa', 'history'],
         default=None,
-        help='Type of side panel to include: "qa" for Q&A chat interface (side-by-side layout). By default, no side panel is included.'
+        help='Type of side panel to include: "qa" for Q&A chat interface, "history" for research history visualization (side-by-side layout). By default, no side panel is included.'
     )
     
     parser.add_argument(

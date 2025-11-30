@@ -58,6 +58,7 @@ arxiv2poster <arxiv_id> [options]
   - When side panel is enabled: uses wider aspect ratios (21:9 for landscape, 4:3 for portrait)
   - Available options:
     - `qa`: Q&A chat interface with common questions and answers about the paper
+    - `history`: Research history visualization showing the evolution of the field leading up to this paper (uses Google Search tool)
   - Future side panel types can be added (e.g., summary, keypoints, methodology)
 - `--whatif`: "What if" idea text to incorporate into an existing poster
   - Requires an existing poster file matching current arguments (arxivID, orientation, language, side panel type)
@@ -101,6 +102,9 @@ arxiv2poster 2301.12345 --side-panel qa
 
 # Generate poster with Q&A in Korean
 arxiv2poster 2301.12345 --side-panel qa --language Korean
+
+# Generate poster with research history visualization
+arxiv2poster 2301.12345 --side-panel history
 
 # "What if" feature: add idea to existing poster
 arxiv2poster 2301.12345 --whatif "What if we apply this to medical imaging?"
@@ -170,7 +174,7 @@ arxiv2poster 2301.12345 --whatif "What if we scale this to 1000x larger datasets
 ### Poster Generation
 - Upload entire PDF file to Gemini API for comprehensive analysis
 - **Side-by-Side Layout Structure:**
-  - **Left Side (60-65% width)**: Traditional academic poster with all key research information
+  - **Left Side (approximately 70-75% width)**: Traditional academic poster with all key research information
     - Clear grid-based layout with well-defined sections
     - **Layout ordering depends on orientation:**
       - **Landscape**: Column-first ordering principle - read top to bottom within each column, then move to the next column (left to right)
@@ -180,10 +184,12 @@ arxiv2poster 2301.12345 --whatif "What if we scale this to 1000x larger datasets
     - Prioritize visual communication and insights over lengthy text descriptions
     - Highlight important information and key insights
     - Incorporate paper title, key concepts, and visual elements from the paper
-  - **Right Side (35-40% width)**: Q&A Chat Interface
-    - Modern chat interface/messaging app style box
+  - **Right Side (approximately 25-30% width, NOT TOO WIDE)**: Q&A Chat Interface or Research History Visualization
+    - The side panel should be narrow, similar to a 9:16 portrait aspect ratio in terms of width proportion
+    - Keep the side panel compact and focused, not taking up too much horizontal space
+    - For Q&A: Modern chat interface/messaging app style box
     - Chat header/title area (e.g., "Questions & Answers" or "Q&A About This Paper")
-    - Display 4-6 common questions and answers about the paper in chat bubble format
+    - Display up to 4 common questions and answers about the paper in chat bubble format (maximum 4 Q&A pairs total)
     - Questions appear as user messages (typically right-aligned, different color/style)
     - Answers appear as assistant/bot messages (typically left-aligned, different color/style)
     - Chat bubble design with rounded corners, appropriate colors, and clear visual distinction
@@ -191,6 +197,13 @@ arxiv2poster 2301.12345 --whatif "What if we scale this to 1000x larger datasets
     - Answers are concise, informative, and directly address the questions
     - Scrollable chat appearance or multiple visible Q&A pairs
     - Modern, clean, professional chat interface appearance
+    - For History: Timeline or history visualization panel
+    - Research history header/title area (e.g., "Research History" or "Evolution of This Field")
+    - Visualize research history leading up to this paper using Google Search
+    - Display key milestones, influential papers, and important developments chronologically
+    - Timeline design with dates, events, visual connections, and important breakthroughs
+    - Show how the current paper fits into the broader research landscape
+    - Based on actual research developments found through web search
   - **Visual Separation**: Clear vertical divider or visual separator between the two sections
 - Support both landscape (21:9) and portrait (4:3) orientations with wider aspect ratios for side-by-side layout
 - Generate high-quality images suitable for printing or digital display
@@ -248,7 +261,7 @@ Create a side-by-side academic poster with Q&A chat interface for this research 
 LAYOUT STRUCTURE:
 The image must be divided into TWO DISTINCT SECTIONS side by side:
 
-LEFT SIDE (60-65% of width): ACADEMIC POSTER
+LEFT SIDE (approximately 70-75% of width): ACADEMIC POSTER
 - Traditional academic poster layout with all key research information
 - Use a clear grid-based layout with well-defined sections
 - **Ordering principle depends on orientation:**
@@ -264,17 +277,27 @@ LEFT SIDE (60-65% of width): ACADEMIC POSTER
 - Maintain consistent margins and padding
 - Ensure text blocks are properly aligned
 
-RIGHT SIDE (35-40% of width): Q&A CHAT INTERFACE
-- Design a modern chat interface/messaging app style box
-- Include a chat header/title area (e.g., "Questions & Answers" or "Q&A About This Paper")
-- Display up to 4 common questions and answers about the paper in a chat bubble format (maximum 4 Q&A pairs total)
-- Questions should appear as user messages (typically on the right, different color/style)
-- Answers should appear as assistant/bot messages (typically on the left, different color/style)
-- Use chat bubble design with rounded corners, appropriate colors, and clear visual distinction
-- Questions should cover: methodology, key findings, applications, limitations, contributions
-- Answers should be concise, informative, and directly address the questions
-- Include scrollable chat appearance or multiple visible Q&A pairs
-- Make it look like a real chat interface (modern, clean, professional)
+RIGHT SIDE (approximately 25-30% of width, NOT TOO WIDE): Q&A CHAT INTERFACE or RESEARCH HISTORY VISUALIZATION
+- The side panel should be narrow, similar to a 9:16 portrait aspect ratio in terms of width proportion
+- Keep the side panel compact and focused, not taking up too much horizontal space
+- For Q&A: Design a modern chat interface/messaging app style box
+  - Include a chat header/title area (e.g., "Questions & Answers" or "Q&A About This Paper")
+  - Display up to 4 common questions and answers about the paper in a chat bubble format (maximum 4 Q&A pairs total)
+  - Questions should appear as user messages (typically on the right, different color/style)
+  - Answers should appear as assistant/bot messages (typically on the left, different color/style)
+  - Use chat bubble design with rounded corners, appropriate colors, and clear visual distinction
+  - Questions should cover: methodology, key findings, applications, limitations, contributions
+  - Answers should be concise, informative, and directly address the questions
+  - Include scrollable chat appearance or multiple visible Q&A pairs
+  - Make it look like a real chat interface (modern, clean, professional)
+- For History: Design a timeline or history visualization panel
+  - Include a header/title area (e.g., "Research History" or "Evolution of This Field")
+  - Visualize the research history leading up to this paper using information from Google Search
+  - Display key milestones, influential papers, and important developments in chronological order
+  - Use timeline design with vertical or horizontal layout, key dates, visual connections, and important breakthroughs
+  - Show how this current paper builds upon or relates to previous work
+  - Include visual elements like timeline markers, connecting lines, icons, and color coding
+  - The history should be based on actual research developments found through web search
 
 VISUAL SEPARATION:
 - Use a clear vertical divider or visual separator between the two sections
@@ -318,16 +341,25 @@ contents = [
 ]
 
 # Generate the poster image
+# Add Google Search tool if history side panel is enabled
+tools = None
+if side_panel == "history":
+    tools = [types.Tool(googleSearch=types.GoogleSearch())]
+
+config_params = {
+    "response_modalities": ['TEXT', 'IMAGE'],
+    "image_config": types.ImageConfig(
+        aspectRatio=aspect_ratio,
+        imageSize=resolution
+    ),
+}
+if tools:
+    config_params["tools"] = tools
+
 response = client.models.generate_content(
     model="gemini-3-pro-image-preview",
     contents=contents,
-    config=types.GenerateContentConfig(
-        response_modalities=['TEXT', 'IMAGE'],
-        image_config=types.ImageConfig(
-            aspectRatio=aspect_ratio,
-            imageSize=resolution
-        ),
-    )
+    config=types.GenerateContentConfig(**config_params)
 )
 
 # Save the generated poster

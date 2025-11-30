@@ -83,6 +83,9 @@ arxiv2poster 1706.03762 --side-panel qa
 # Generate poster with Q&A in Korean
 arxiv2poster 1706.03762 --side-panel qa --language Korean
 
+# Generate poster with research history visualization
+arxiv2poster 1706.03762 --side-panel history
+
 # "What if" feature: add idea to existing poster
 arxiv2poster 1706.03762 --whatif "What if we apply this to medical imaging?"
 # → outputs/poster_1706.03762_landscape_english_noqa_var_1.png
