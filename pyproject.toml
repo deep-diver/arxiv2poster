@@ -40,8 +40,12 @@ dev = [
 arxiv2poster = "arxiv2poster.cli:main"
 
 [project.urls]
-Homepage = "https://github.com/yourusername/arxiv2poster"
-Documentation = "https://github.com/yourusername/arxiv2poster#readme"
-Repository = "https://github.com/yourusername/arxiv2poster"
-Issues = "https://github.com/yourusername/arxiv2poster/issues"
+Homepage = "https://github.com/deep-diver/arxiv2poster"
+Documentation = "https://github.com/deep-diver/arxiv2poster#readme"
+Repository = "https://github.com/deep-diver/arxiv2poster"
+Issues = "https://github.com/deep-diver/arxiv2poster/issues"
+
+[tool.setuptools.packages.find]
+include = ["arxiv2poster*"]
+exclude = ["blogposts*", "tests*"]
 
