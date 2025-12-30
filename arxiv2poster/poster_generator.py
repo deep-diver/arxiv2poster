@@ -213,7 +213,48 @@ The image is a single, full-width academic poster:"""
     is_whatif = whatif_text is not None and existing_poster_path is not None
     variation_note = " (variation incorporating a 'what if' idea)" if is_whatif else ""
     side_panel_note = f" with {side_panel_description}" if side_panel_description else ""
-    
+
+    # Build conditional content sections BEFORE the main f-string
+    # (Can't nest f-strings in Python)
+    if side_panel == "qa":
+        extra_content_requirements = """
+Q&A CONTENT REQUIREMENTS (Right Side):
+- Generate realistic, common questions that researchers or readers would ask about this paper
+- Questions should be specific to the paper's content, methodology, and findings
+- Answers should be accurate, concise, and directly based on the paper's content
+- Cover diverse aspects: technical details, practical applications, limitations, future work
+- Make Q&As informative and valuable for understanding the paper
+
+IMPORTANT:
+- The poster should prioritize visual communication over text. Use insights, highlights, and key points rather than descriptive paragraphs.
+- The Q&A side should look like a real, modern chat interface with proper chat bubble styling.
+- Both sides should work together as a cohesive single image that provides both visual poster information and Q&A chat interface."""
+    elif side_panel == "history":
+        extra_content_requirements = """
+RESEARCH HISTORY CONTENT REQUIREMENTS (Right Side):
+- Use Google Search to find information about the research history leading up to this paper
+- Search for: key papers in this field, influential researchers, important milestones, evolution of the research area
+- Visualize the chronological progression of research in this field
+- Include major breakthroughs, foundational papers, and significant developments
+- Show how this current paper fits into the broader research landscape
+- Display key information such as:
+  - Important papers and their publication years
+  - Key researchers and their contributions
+  - Major milestones or paradigm shifts
+  - Evolution of methodologies or approaches
+- The history visualization should be based on real information found through web search
+- Make connections clear between historical developments and the current paper
+
+IMPORTANT:
+- The poster should prioritize visual communication over text. Use insights, highlights, and key points rather than descriptive paragraphs.
+- The history side should show a clear, visually appealing timeline or progression of research.
+- Both sides should work together as a cohesive single image that provides both visual poster information and research history visualization."""
+    else:
+        extra_content_requirements = """
+IMPORTANT:
+- The poster should prioritize visual communication over text. Use insights, highlights, and key points rather than descriptive paragraphs.
+- The poster should convey the essence of the research quickly and effectively."""
+
     poster_prompt = f"""
 Create an academic poster{side_panel_note}{variation_note} for this research paper.
 {whatif_section}
@@ -247,34 +288,11 @@ POSTER CONTENT STRATEGY:
 - **Methodology**: Highlight the approach, not exhaustive details
 - **Results**: Emphasize key results and conclusions with visual emphasis
 - **Takeaways**: Make insights clear and immediately understandable
-{f"""
-Q&A CONTENT REQUIREMENTS (Right Side):
-- Generate realistic, common questions that researchers or readers would ask about this paper
-- Questions should be specific to the paper's content, methodology, and findings
-- Answers should be accurate, concise, and directly based on the paper's content
-- Cover diverse aspects: technical details, practical applications, limitations, future work
-- Make Q&As informative and valuable for understanding the paper
-""" if side_panel == "qa" else ""}
-{f"""
-RESEARCH HISTORY CONTENT REQUIREMENTS (Right Side):
-- Use Google Search to find information about the research history leading up to this paper
-- Search for: key papers in this field, influential researchers, important milestones, evolution of the research area
-- Visualize the chronological progression of research in this field
-- Include major breakthroughs, foundational papers, and significant developments
-- Show how this current paper fits into the broader research landscape
-- Display key information such as:
-  - Important papers and their publication years
-  - Key researchers and their contributions
-  - Major milestones or paradigm shifts
-  - Evolution of methodologies or approaches
-- The history visualization should be based on real information found through web search
-- Make connections clear between historical developments and the current paper
-""" if side_panel == "history" else ""}
-IMPORTANT: 
-- The poster should prioritize visual communication over text. Use insights, highlights, and key points rather than descriptive paragraphs.
-{f"- The Q&A side should look like a real, modern chat interface with proper chat bubble styling." if side_panel == "qa" else ""}
-{f"- The history side should show a clear, visually appealing timeline or progression of research." if side_panel == "history" else ""}
-{f"- Both sides should work together as a cohesive single image that provides both visual poster information and {side_panel_description}." if side_panel else "- The poster should convey the essence of the research quickly and effectively."}
+{extra_content_requirements}
+
+LAYOUT ORIENTATION:
+- Orientation: {orientation.upper()} ({aspect_ratio} aspect ratio)
+- {ordering_principle}
 """
     
     # Create content with PDF file, existing poster (if provided), and text prompt
@@ -299,13 +317,7 @@ IMPORTANT:
         )
     
     contents.append(types.Part(text=poster_prompt))
-    
-    # Generate the poster image
-    # Build ImageConfig - only include imageSize for Pro model (Flash doesn't support it)
-    image_config_params = {"aspectRatio": aspect_ratio}
-    if model == "pro":
-        image_config_params["imageSize"] = resolution
-    
+
     # Add Google Search tool if history side panel is enabled
     tools = None
     if side_panel == "history":
@@ -314,13 +326,17 @@ IMPORTANT:
         ]
     
     try:
+        # Build config for new google-genai API (v1.16+)
         config_params = {
-            "response_modalities": ['TEXT', 'IMAGE'],
-            "image_config": types.ImageConfig(**image_config_params),
+            "response_modalities": ["IMAGE"],
         }
+
+        # Note: media_resolution is not supported in the new API for image generation models
+        # The resolution is determined by the model itself
+
         if tools:
             config_params["tools"] = tools
-        
+
         response = client.models.generate_content(
             model=api_model,
             contents=contents,
@@ -348,14 +364,43 @@ IMPORTANT:
     
     # Extract and save image
     image_saved = False
-    for part in response.parts:
-        if image := part.as_image():
-            image.save(output_path)
-            image_saved = True
-            break
-    
+
+    # New google-genai API structure: response.candidates[0].content.parts
+    if response.candidates and len(response.candidates) > 0:
+        candidate = response.candidates[0]
+        if candidate.content and candidate.content.parts:
+            for part in candidate.content.parts:
+                # Check if part contains file_data (image from generation)
+                if part.file_data and part.file_data.file_uri:
+                    import urllib.request
+                    urllib.request.urlretrieve(part.file_data.file_uri, output_path)
+                    image_saved = True
+                    break
+                # Check if part contains inline_data (image)
+                elif part.inline_data and part.inline_data.data:
+                    import base64
+                    from PIL import Image
+                    import io
+
+                    # Decode base64 image data
+                    try:
+                        image_data = base64.b64decode(part.inline_data.data)
+                        image = Image.open(io.BytesIO(image_data))
+                        image.save(output_path)
+                        image_saved = True
+                        break
+                    except Exception as e:
+                        # Try writing data directly
+                        with open(output_path, 'wb') as f:
+                            f.write(part.inline_data.data)
+                        image_saved = True
+                        break
+
     if not image_saved:
+        # Debug: print response structure
+        import pprint
+        pprint.pprint(response.model_dump())
         raise RuntimeError("No image was generated in the API response")
-    
+
     return output_path
 
